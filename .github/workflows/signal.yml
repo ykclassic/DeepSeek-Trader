@@ -1,0 +1,43 @@
+name: Crypto Signal Engine
+
+on:
+  schedule:
+    - cron: '0 */4 * * *'          # Every 4 hours
+    - cron: '*/15 9-17 * * 1-5'    # Every 15 min during market hours (UTC)
+  push:
+    branches: [ dev ]               # Trigger backtest on push
+
+jobs:
+  run-signals:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Run Signal Engine
+        run: python -m bot.main
+        env:
+          DISCORD_SIGNALS_WEBHOOK: ${{ secrets.DISCORD_SIGNALS_WEBHOOK }}
+          DISCORD_HIGH_CONV_WEBHOOK: ${{ secrets.DISCORD_HIGH_CONV_WEBHOOK }}
+          DISCORD_LOGS_WEBHOOK: ${{ secrets.DISCORD_LOGS_WEBHOOK }}
+          EXCHANGE_API_KEY: ${{ secrets.EXCHANGE_API_KEY }}
+          EXCHANGE_SECRET: ${{ secrets.EXCHANGE_SECRET }}
+          GLASSNODE_API_KEY: ${{ secrets.GLASSNODE_API_KEY }}
+          COINGLASS_API_KEY: ${{ secrets.COINGLASS_API_KEY }}
+  run-backtest:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Run Backtest Validator
+        run: python -m bot.backtest_validator
