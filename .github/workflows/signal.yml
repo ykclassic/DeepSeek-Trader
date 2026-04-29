@@ -1,23 +1,27 @@
 name: Crypto Signal Engine
 
 on:
+  workflow_dispatch:                 # manual trigger from GitHub Actions tab
   schedule:
-    - cron: '0 */4 * * *'          # Every 4 hours
-    - cron: '*/15 9-17 * * 1-5'    # Every 15 min during market hours (UTC)
+    - cron: '0 */4 * * *'           # every 4 hours
+    - cron: '*/15 9-17 * * 1-5'     # every 15 minutes during market hours (UTC)
   push:
-    branches: [ dev ]               # Trigger backtest on push
+    branches: [ dev ]               # trigger backtest on push to dev
 
 jobs:
   run-signals:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
+
       - name: Install dependencies
         run: pip install -r requirements.txt
+
       - name: Run Signal Engine
         run: python -m bot.main
         env:
@@ -28,16 +32,20 @@ jobs:
           EXCHANGE_SECRET: ${{ secrets.EXCHANGE_SECRET }}
           GLASSNODE_API_KEY: ${{ secrets.GLASSNODE_API_KEY }}
           COINGLASS_API_KEY: ${{ secrets.COINGLASS_API_KEY }}
+
   run-backtest:
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
     steps:
       - uses: actions/checkout@v3
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
+
       - name: Install dependencies
         run: pip install -r requirements.txt
+
       - name: Run Backtest Validator
         run: python -m bot.backtest_validator
