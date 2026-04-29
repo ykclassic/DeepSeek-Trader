@@ -1,0 +1,103 @@
+indicators:
+  ema_ribbon: [8, 13, 21, 50, 100, 200]
+  sma:
+    fast: 50
+    slow: 200
+  supertrend:
+    atr_period: 10
+    multiplier: 3
+  ichimoku:
+    tenkan: 9
+    kijun: 26
+    senkou_b: 52
+  psar:
+    acceleration: 0.02
+    maximum: 0.2
+  rsi:
+    period: 14
+    default_ob: 70
+    default_os: 30
+    adaptive_bull: {ob: 80, os: 40}
+    adaptive_bear: {ob: 60, os: 20}
+  macd: {fast: 12, slow: 26, signal: 9}
+  stoch_rsi: {k: 14, d: 3, smooth: 3}
+  cci: 20
+  mfi: 14
+  williams_r: 14
+  roc: 10
+  bb: {period: 20, std: 2}
+  kc: {period: 20, atr_mult: 1.5}
+  atr: 14
+  donchian: 20
+  hv_percentile: {period: 20, lookback: 100}
+  obv: {}            # cumulative
+  vwap_mode: "session"   # session or rolling
+  volume_profile_bins: 24
+  cvd: {}            # cumulative volume delta (derived)
+  chaikin_mf: 20
+  smc:
+    ob_lookback: 5
+    fvg_min_gap_pct: 0.1   # minimum % gap
+  fib_levels: [0.382, 0.5, 0.618, 0.786]
+  pivot_mode: "classic"   # classic, camarilla, woodie
+  # On-chain thresholds (override via API)
+  mvrv_z_buy: 0
+  mvrv_z_sell: 5
+  puell_buy: 0.5
+  puell_sell: 3
+  funding_extreme: 0.001   # 0.1% positive
+  oi_change_thresh: -0.05
+  long_short_extreme: 3.0
+  fear_greed:
+    extreme_fear: 25
+    extreme_greed: 75
+
+strategies:
+  trend_rider:
+    ema_trend_check: 200
+    rsi_zone: [50, 70]
+  breakout:
+    squeeze_bars: 15
+    volume_spike_mult: 1.5
+  mean_reversion:
+    rsi_os: 30
+    rsi_ob: 70
+    cci_low: -100
+    cci_high: 100
+  smc: {}             # triggered by BOS/CHOCH automatically
+  vwap_reversion:
+    sd_threshold: 1.5
+  funding_fade:
+    funding_limit: 0.001
+    ls_ratio_limit: 3.0
+  liquidation_sweep:
+    sweep_reversal_pct: 1.5
+  onchain_bias: {}    # controlled by on-chain engine
+
+risk:
+  max_risk_per_trade: 0.015      # 1.5%
+  min_rr_ratio: 2.0
+  max_correlated_trades: 3
+  daily_loss_limit: 0.04         # 4%
+  weekly_dd_limit: 0.10          # 10%
+  consecutive_loss_cap: 3
+  trailing_stop_mode: "supertrend"  # or "chandelier"
+
+consensus_scoring:
+  weights:
+    trend_alignment: 2.0
+    momentum: 1.5
+    volume_confirmation: 1.5
+    structure_smc: 2.0
+    onchain_support: 1.0
+    volatility_regime: 1.0
+    sentiment: 0.5
+    multi_tf_alignment: 0.5
+  minimum_fire_score: 7
+  high_conviction_threshold: 9
+
+app:
+  timeframes: ["1h", "4h"]
+  symbols: ["BTC/USDT", "ETH/USDT"]
+  log_level: "INFO"
+  run_interval_minutes: 15   # for VPS/scheduler mode (GitHub Actions overrides)
