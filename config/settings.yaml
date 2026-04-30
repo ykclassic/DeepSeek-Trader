@@ -1,6 +1,6 @@
- exchange:
+exchange:
   name: xt
-  use_api_keys: false       # XT public data works without API keys
+  use_api_keys: false
 
 indicators:
   ema_ribbon: [8, 13, 21, 50, 100, 200]
@@ -21,19 +21,35 @@ indicators:
     period: 14
     default_ob: 70
     default_os: 30
-    adaptive_bull: {ob: 80, os: 40}
-    adaptive_bear: {ob: 60, os: 20}
-  macd: {fast: 12, slow: 26, signal: 9}
-  stoch_rsi: {k: 14, d: 3, smooth: 3}
+    adaptive_bull:
+      ob: 80
+      os: 40
+    adaptive_bear:
+      ob: 60
+      os: 20
+  macd:
+    fast: 12
+    slow: 26
+    signal: 9
+  stoch_rsi:
+    k: 14
+    d: 3
+    smooth: 3
   cci: 20
   mfi: 14
   williams_r: 14
   roc: 10
-  bb: {period: 20, std: 2}
-  kc: {period: 20, atr_mult: 1.5}
+  bb:
+    period: 20
+    std: 2
+  kc:
+    period: 20
+    atr_mult: 1.5
   atr: 14
   donchian: 20
-  hv_percentile: {period: 20, lookback: 100}
+  hv_percentile:
+    period: 20
+    lookback: 100
   obv: {}
   vwap_mode: "session"
   volume_profile_bins: 24
