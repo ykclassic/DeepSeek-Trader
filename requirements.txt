@@ -1,6 +1,6 @@
 ccxt
 pandas
-pandas-ta
+pandas-ta-classic
 TA-Lib
 PyYAML
 python-dotenv
