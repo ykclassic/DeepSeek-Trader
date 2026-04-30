@@ -1,4 +1,4 @@
- import pandas as pd
+import pandas as pd
 import numpy as np
 from loguru import logger
 from bot.indicator_engine import IndicatorEngine
@@ -55,10 +55,16 @@ class StrategyEngine:
             pullback_ema = ind['ema_ribbon'].get('ema_21', pd.Series()).iloc[-1]
             entry = pullback_ema if pullback_ema and close > pullback_ema else close
             stop = ind['supertrend']['SUPERT_10_3.0'].iloc[-1]
-            targets = [close + atr for atr in [ind['atr'].iloc[-1]*1.5, ind['atr'].iloc[-1]*3.0]]
-            return {'strategy': 'Trend Rider', 'direction': 'LONG',
-                    'entry_low': min(entry, entry*0.999), 'entry_high': entry*1.001,
-                    'stop': stop, 'targets': targets, 'confidence': 7.0}
+            targets = [close + ind['atr'].iloc[-1]*1.5, close + ind['atr'].iloc[-1]*3.0]
+            return {
+                'strategy': 'Trend Rider',
+                'direction': 'LONG',
+                'entry_low': min(entry, entry*0.999),
+                'entry_high': entry*1.001,
+                'stop': stop,
+                'targets': targets,
+                'confidence': 7.0
+            }
         return None
 
     def _breakout_squeeze(self, df, ind):
@@ -72,10 +78,15 @@ class StrategyEngine:
                 vol_sma = df['volume'].rolling(20).mean()
                 if df['volume'].iloc[-1] > self.cfg['strategies']['breakout']['volume_spike_mult'] * vol_sma.iloc[-1]:
                     atr = ind['atr'].iloc[-1]
-                    return {'strategy': 'Breakout Squeeze', 'direction': 'LONG',
-                            'entry_low': close, 'entry_high': close*1.005,
-                            'stop': close - 2*atr, 'targets': [close+atr, close+2*atr],
-                            'confidence': 7.5}
+                    return {
+                        'strategy': 'Breakout Squeeze',
+                        'direction': 'LONG',
+                        'entry_low': close,
+                        'entry_high': close*1.005,
+                        'stop': close - 2*atr,
+                        'targets': [close+atr, close+2*atr],
+                        'confidence': 7.5
+                    }
         return None
 
     def _mean_reversion(self, df, ind, derivatives):
@@ -86,13 +97,27 @@ class StrategyEngine:
         if rsi < 30 and cci < -100 and funding < 0.001:
             atr = ind['atr'].iloc[-1]
             target = ind['vwap'].iloc[-1] if 'vwap' in ind else ind['bb']['BBM_20_2.0'].iloc[-1]
-            return {'strategy': 'Mean Reversion', 'direction': 'LONG',
-                    'entry_low': close, 'entry_high': close,
-                    'stop': close - 2*atr, 'targets': [target], 'confidence': 5.5}
+            return {
+                'strategy': 'Mean Reversion',
+                'direction': 'LONG',
+                'entry_low': close,
+                'entry_high': close,
+                'stop': close - 2*atr,
+                'targets': [target],
+                'confidence': 5.5
+            }
         if rsi > 70 and cci > 100 and funding > 0.001:
-            return {'strategy': 'Mean Reversion', 'direction': 'SHORT',
-                    'entry_low': close, 'entry_high': close,
-                    'stop': close + 2*atr, 'targets': [ind['vwap'].iloc[-1]], 'confidence': 5.5}
+            atr = ind['atr'].iloc[-1]
+            target = ind['vwap'].iloc[-1] if 'vwap' in ind else ind['bb']['BBM_20_2.0'].iloc[-1]
+            return {
+                'strategy': 'Mean Reversion',
+                'direction': 'SHORT',
+                'entry_low': close,
+                'entry_high': close,
+                'stop': close + 2*atr,
+                'targets': [target],
+                'confidence': 5.5
+            }
         return None
 
     def _smc_signal(self, df, ind, smc_data):
@@ -106,11 +131,15 @@ class StrategyEngine:
                         entry_low = fvg['bottom']
                         stop = ob['bottom']
                         risk = entry_high - stop
-                        return {'strategy': 'SMC', 'direction': 'LONG',
-                                'entry_low': entry_low, 'entry_high': entry_high,
-                                'stop': stop,
-                                'targets': [entry_high + risk, entry_high + 2*risk],
-                                'confidence': 9.0}
+                        return {
+                            'strategy': 'SMC',
+                            'direction': 'LONG',
+                            'entry_low': entry_low,
+                            'entry_high': entry_high,
+                            'stop': stop,
+                            'targets': [entry_high + risk, entry_high + 2*risk],
+                            'confidence': 9.0
+                        }
         return None
 
     def _vwap_reversion(self, df, ind):
@@ -123,16 +152,26 @@ class StrategyEngine:
         last_dev = deviation.iloc[-1]
         if last_dev > self.cfg['strategies']['vwap_reversion']['sd_threshold']:
             atr = ind['atr'].iloc[-1]
-            return {'strategy': 'VWAP Reversion', 'direction': 'SHORT',
-                    'entry_low': close.iloc[-1], 'entry_high': close.iloc[-1],
-                    'stop': close.iloc[-1] + 2*atr, 'targets': [vwap_series.iloc[-1]],
-                    'confidence': 6.0}
+            return {
+                'strategy': 'VWAP Reversion',
+                'direction': 'SHORT',
+                'entry_low': close.iloc[-1],
+                'entry_high': close.iloc[-1],
+                'stop': close.iloc[-1] + 2*atr,
+                'targets': [vwap_series.iloc[-1]],
+                'confidence': 6.0
+            }
         if last_dev < -self.cfg['strategies']['vwap_reversion']['sd_threshold']:
             atr = ind['atr'].iloc[-1]
-            return {'strategy': 'VWAP Reversion', 'direction': 'LONG',
-                    'entry_low': close.iloc[-1], 'entry_high': close.iloc[-1],
-                    'stop': close.iloc[-1] - 2*atr, 'targets': [vwap_series.iloc[-1]],
-                    'confidence': 6.0}
+            return {
+                'strategy': 'VWAP Reversion',
+                'direction': 'LONG',
+                'entry_low': close.iloc[-1],
+                'entry_high': close.iloc[-1],
+                'stop': close.iloc[-1] - 2*atr,
+                'targets': [vwap_series.iloc[-1]],
+                'confidence': 6.0
+            }
         return None
 
     def _funding_fade(self, derivatives, price):
@@ -140,10 +179,15 @@ class StrategyEngine:
         ls = derivatives.get('long_short_ratio', 1)
         if fund > self.cfg['strategies']['funding_fade']['funding_limit'] and \
            ls > self.cfg['strategies']['funding_fade']['ls_ratio_limit']:
-            return {'strategy': 'Funding Fade', 'direction': 'SHORT',
-                    'entry_low': price, 'entry_high': price,
-                    'stop': price*1.02, 'targets': [price*0.98, price*0.96],
-                    'confidence': 6.5}
+            return {
+                'strategy': 'Funding Fade',
+                'direction': 'SHORT',
+                'entry_low': price,
+                'entry_high': price,
+                'stop': price*1.02,
+                'targets': [price*0.98, price*0.96],
+                'confidence': 6.5
+            }
         return None
 
     def _liquidation_sweep(self, df, liquidation_levels):
@@ -155,15 +199,22 @@ class StrategyEngine:
         levels.sort(key=lambda x: x[1], reverse=True)
         target_price = levels[0][0]
         recent_candles = df.iloc[-5:]
-        swept = any(candle['low'] <= target_price <= candle['high'] for _, candle in recent_candles.iterrows())
+        swept = any(
+            candle['low'] <= target_price <= candle['high']
+            for _, candle in recent_candles.iterrows()
+        )
         if swept:
             last_candle = df.iloc[-1]
             if last_candle['close'] > last_candle['open'] and last_candle['low'] <= target_price:
-                return {'strategy': 'Liquidation Sweep', 'direction': 'LONG',
-                        'entry_low': last_candle['close'], 'entry_high': last_candle['close'],
-                        'stop': target_price - recent_candles['low'].min() * 0.005,
-                        'targets': [last_candle['close']*1.02, last_candle['close']*1.04],
-                        'confidence': 8.0}
+                return {
+                    'strategy': 'Liquidation Sweep',
+                    'direction': 'LONG',
+                    'entry_low': last_candle['close'],
+                    'entry_high': last_candle['close'],
+                    'stop': target_price - recent_candles['low'].min() * 0.005,
+                    'targets': [last_candle['close']*1.02, last_candle['close']*1.04],
+                    'confidence': 8.0
+                }
         return None
 
     def _onchain_alpha(self, onchain, derivatives, price):
@@ -174,15 +225,25 @@ class StrategyEngine:
         if mvrv < self.cfg['strategies']['onchain_bias']['mvrv_buy'] and \
            puell < self.cfg['strategies']['onchain_bias']['puell_buy'] and \
            netflow < 0:
-            return {'strategy': 'On-Chain Alpha', 'direction': 'LONG',
-                    'entry_low': price, 'entry_high': price,
-                    'stop': price*0.9, 'targets': [price*1.3],
-                    'confidence': 7.5}
+            return {
+                'strategy': 'On-Chain Alpha',
+                'direction': 'LONG',
+                'entry_low': price,
+                'entry_high': price,
+                'stop': price*0.9,
+                'targets': [price*1.3],
+                'confidence': 7.5
+            }
         if mvrv > self.cfg['strategies']['onchain_bias']['mvrv_sell'] and \
            puell > self.cfg['strategies']['onchain_bias']['puell_sell'] and \
            netflow > 0:
-            return {'strategy': 'On-Chain Alpha', 'direction': 'SHORT',
-                    'entry_low': price, 'entry_high': price,
-                    'stop': price*1.1, 'targets': [price*0.7],
-                    'confidence': 7.5}
+            return {
+                'strategy': 'On-Chain Alpha',
+                'direction': 'SHORT',
+                'entry_low': price,
+                'entry_high': price,
+                'stop': price*1.1,
+                'targets': [price*0.7],
+                'confidence': 7.5
+            }
         return None
