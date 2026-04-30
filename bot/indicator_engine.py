@@ -68,7 +68,7 @@ class IndicatorEngine:
         )
         ind['cci'] = ta.cci(df['high'], df['low'], df['close'], length=self.cfg['cci'])
         ind['mfi'] = ta.mfi(df['high'], df['low'], df['close'], vol, length=self.cfg['mfi'])
-        ind['williams_r'] = ta.willr(df['high'], df['low'], df['close'], length=self.cfg['williams_r'])   # ← FIXED
+        ind['williams_r'] = ta.willr(df['high'], df['low'], df['close'], length=self.cfg['williams_r'])
         ind['roc'] = ta.roc(df['close'], length=self.cfg['roc'])
 
         # ====================================================
@@ -92,7 +92,7 @@ class IndicatorEngine:
         # ====================================================
         ind['obv'] = ta.obv(df['close'], vol)
         ind['vwap'] = ta.vwap(df['high'], df['low'], df['close'], vol)
-        ind['cmf'] = ta.chaikin_money_flow(df['high'], df['low'], df['close'], vol, length=self.cfg['chaikin_mf'])
+        ind['cmf'] = ta.cmf(df['high'], df['low'], df['close'], vol, length=self.cfg['chaikin_mf'])   # Fixed
 
         # CVD approximation: (close-low)-(high-close) / range * volume
         high_low = df['high'] - df['low']
