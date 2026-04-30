@@ -1,34 +1,38 @@
 from loguru import logger
+from bot.data_fetcher import DataFetcher
 
 class OnchainEngine:
-    def __init__(self, data_fetcher, config):
-        self.fetcher = data_fetcher
-        self.cfg = config
+    def __init__(self, fetcher: DataFetcher):
+        self.fetcher = fetcher
 
-    def get_onchain_signals(self):
-        bundle = self.fetcher.get_onchain_bundle()
-        signals = {}
-        # MVRV Z-Score
+    def get_full_onchain(self, asset='BTC') -> dict:
+        """
+        Aggregates all on‑chain metrics into a single dictionary.
+        Returns None values replaced by zeros so scoring never crashes.
+        """
+        data = {}
         try:
-            mvrv = bundle['mvrv_z'][-1]['v'] if bundle['mvrv_z'] else 0
-            signals['mvrv_z'] = float(mvrv)
-        except: signals['mvrv_z'] = 0
-        # Puell Multiple
+            data['mvrv_z'] = self.fetcher.get_mvrv_z(asset) or 0
+            data['puell'] = self.fetcher.get_puell_multiple(asset) or 0
+            data['sopr'] = self.fetcher.get_sopr(asset) or 0
+            data['netflow'] = self.fetcher.get_exchange_netflow(asset) or 0
+            data['active_addresses'] = self.fetcher.get_active_addresses(asset) or 0
+            data['tx_volume'] = self.fetcher.get_transaction_volume(asset) or 0
+            data['btc_dominance'] = self.fetcher.get_btc_dominance() or 0
+            data['ssr'] = self.fetcher.get_ssr() or 0
+        except Exception as e:
+            logger.error(f"On‑chain data error: {e}")
+        return data
+
+    def get_derivatives(self, symbol='BTC') -> dict:
+        d = {}
         try:
-            puell = bundle['puell'][-1]['v'] if bundle['puell'] else 0
-            signals['puell'] = float(puell)
-        except: signals['puell'] = 0
-        # Netflow (negative = outflow)
-        try:
-            nf = bundle['netflow'][-1]['v'] if bundle['netflow'] else 0
-            signals['netflow'] = float(nf)
-        except: signals['netflow'] = 0
-        # Funding rate from Coinglass (placeholder)
-        signals['funding_rate'] = 0.0
-        signals['open_interest'] = 0.0
-        signals['long_short_ratio'] = 1.0
-        cog = self.fetcher.fetch_coinglass_data('futures/openInterest?symbol=BTC')
-        if cog and 'data' in cog:
-            oi_list = cog['data']
-            if oi_list: signals['open_interest'] = oi_list[-1]['openInterest']
-        return signals
+            d['funding_rate'] = self.fetcher.get_funding_rate(symbol)
+            d['open_interest'] = self.fetcher.get_open_interest(symbol)
+            d['long_short_ratio'] = self.fetcher.get_long_short_ratio(symbol)
+        except Exception as e:
+            logger.error(f"Derivatives data error: {e}")
+        return d
+
+    def get_liquidation_levels(self, symbol='BTC') -> list:
+        return self.fetcher.get_liquidation_heatmap(symbol)
